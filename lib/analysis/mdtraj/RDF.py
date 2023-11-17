@@ -1,9 +1,8 @@
-__all__ = ['compute_RDF']
+__all__ = ['rdf']
 
 import MDAnalysis as mda
+from ...check import check_module, check_func
 
-
-from ..check import check_module, check_func
 
 def main():
     dirpath = '/home/tsingularity/Desktop/scripts_test/target/LAMMPS_lammpstrj/'
@@ -16,27 +15,30 @@ def main():
     coord_number = compute_coord(r, g_r, index_r1=300)
     plot_RDF(r, g_r)
 
-def compute_RDF(dir_init="", dir_target="", file_lammpstrj='dump.lammpstrj', 
-                selection1='type 1', selection2='type 2', start=0, stop=-1, step=1):
+def rdf(**kwargs):
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("analysis").get("mdtraj").get("rdf")
+    file_lammpstrj = param.get("file_lammpstrj", "traj.lammpstrj")
+    selection1 = param.get("selection1", "type 1")
+    selection2 = param.get("selection2", "type 2")
+    range_rdf = param.get("range", (0.0, 15.0))
+    exclusion_block = param.get("exclusion_block", (1, 2))
+    nbins = param.get("nbins", 300)
+    start = param.get("start", 0)
+    stop = param.get("stop", -1)
+    step = param.get("step", 1)
+
     os = check_module('os')
     rdf = check_module('MDAnalysis.analysis.rdf')
 
     u = mda.Universe(os.path.join(dir_init, file_lammpstrj), format='LAMMPSDUMP')
-    print()
     s1 = u.select_atoms(selection1)
     s2 = u.select_atoms(selection2)
-    value_rdf = rdf.InterRDF(s1, s2, range=(0.0, 15.0), #exclusion_block=(1,7), 
-                            nbins=300, norm='rdf', verbose=True)
+    value_rdf = rdf.InterRDF(s1, s2, range=range_rdf, 
+                            nbins=nbins, norm='rdf', verbose=True)
     value_rdf.run(start, stop, step)    
-
-    return [value_rdf.results.bins, value_rdf.results.rdf]
-
-def compute_RDF1(u, selection1, selection2, compute_coord=False):
-    import MDAnalysis.analysis.rdf as rdf
-    value_rdf = rdf.InterRDF(selection1, selection2, range=(0.0, 15.0), exclusion_block=(1,7), 
-                            nbins=300, norm='rdf', verbose=True)
-    value_rdf.run(start=0, stop=-1, step=1)
-
+    plot_rdf(value_rdf.results.bins, value_rdf.results.rdf)
     return [value_rdf.results.bins, value_rdf.results.rdf]
 
 def compute_coord(r, g_r, index_r1):
@@ -46,7 +48,7 @@ def compute_coord(r, g_r, index_r1):
     print("Coordination Numbers is %4.2f"%(coord_number))
     return coord_number
 
-def plot_RDF(r, g_r):
+def plot_rdf(r, g_r):
     import matplotlib.pyplot as plt
     plt.plot(r, g_r, label=r'$g_{CuNi}$(r)')
     plt.ylabel('g(r)')

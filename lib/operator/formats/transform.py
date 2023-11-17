@@ -6,7 +6,7 @@ __all__ = ['pdb2xyz', 'pdb2lammpsdata', 'lammpstrj2lammpsdata', 'npy2poscar', 'p
 from ...check import check_module, check_func
 
 
-def pdb2xyz(dir_init="", dir_target="", names=['O', 'H']):
+def pdb2xyz(**kwargs):
     '''
     通用函数，用于将pdb格式文件转换为xyz格式文件。
 
@@ -17,6 +17,11 @@ def pdb2xyz(dir_init="", dir_target="", names=['O', 'H']):
     返回：
         返回记录值
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("pdb2xyz")
+    names = param.get("names", ['O', 'H'])
+
     mda = check_module('MDAnalysis')
     os = check_module('os')
 
@@ -33,7 +38,7 @@ def pdb2xyz(dir_init="", dir_target="", names=['O', 'H']):
 
     print("The XYZ file has been generated at %s" % os.path.join(dir_target, "system.xyz"))
 
-def pdb2lammpsdata(dir_init="", dir_target=""):
+def pdb2lammpsdata(**kwargs):
     '''
     通用函数，用于将pdb格式文件转换为lammpsdata格式文件。
 
@@ -44,6 +49,9 @@ def pdb2lammpsdata(dir_init="", dir_target=""):
     返回：
         返回记录值
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
     mda = check_module('MDAnalysis')
     os = check_module('os')
 
@@ -68,7 +76,7 @@ def pdb2lammpsdata(dir_init="", dir_target=""):
 
     print("The LAMMPSdata file has been generated at %s" % os.path.join(dir_target, "system.data"))
 
-def lammpstrj2lammpsdata(dir_init="", dir_target=""):
+def lammpstrj2lammpsdata(**kwargs):
     '''
     通用函数，用于将lammpstrj格式文件转换为lammpsdata格式文件。
 
@@ -79,6 +87,9 @@ def lammpstrj2lammpsdata(dir_init="", dir_target=""):
     返回：
         返回记录值
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
     mda = check_module('MDAnalysis')
     os = check_module('os')
 
@@ -99,7 +110,7 @@ def lammpstrj2lammpsdata(dir_init="", dir_target=""):
     print("The LAMMPSdata file has been generated at %s" % os.path.join(dir_target, "system.data"))
 
 
-def npy2poscar(dir_init="", dir_target="", multi=False, record=0):
+def npy2poscar(**kwargs):
     '''
     通用函数，用于将npy格式文件转换为POSCAR格式文件。
 
@@ -110,6 +121,12 @@ def npy2poscar(dir_init="", dir_target="", multi=False, record=0):
     返回：
         返回记录值
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("npy2poscar")
+    multi = param.get("multi", False)
+    record = param.get("record", 0)
+
     os = check_module('os')
     dp = check_module('dpdata')
 
@@ -134,13 +151,16 @@ def npy2poscar(dir_init="", dir_target="", multi=False, record=0):
         return record
 
 
-def poscar2xyz(dir_init="", dir_target=""):
+def poscar2xyz(**kwargs):
     '''
     通用函数，用于将POSCAR格式文件转换为xyz格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
     os = check_module('os')
     read = check_func('ase.io', 'read')
     write = check_func('ase.io', 'write')
@@ -164,13 +184,19 @@ def poscar2xyz(dir_init="", dir_target=""):
         print("The XYZ file has been generated at %s" % dir_xyz)
 
 
-def xyz2npy(dir_init="", dir_target="", multi=False, record=0):
+def xyz2npy(**kwargs):
     '''
     通用函数，用于将xyz格式文件转换为npy格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("xyz2npy")
+    multi = param.get("multi", False)
+    record = param.get("record", 0)
+
     os = check_module('os')
     dp = check_module('dpdata')
 
@@ -195,13 +221,18 @@ def xyz2npy(dir_init="", dir_target="", multi=False, record=0):
 
         return record
 
-def xsd2pdb(dir_init="", dir_target="", filename="system.xsd"):
+def xsd2pdb(**kwargs):
     '''
     通用函数，用于将xsd格式文件转换为pdb格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("xsd2pdb")
+    filename = param.get("filename", "system.pdb")
+
     os = check_module('os')
     read = check_func('ase.io', 'read')
     write = check_func('ase.io', 'write')
@@ -213,13 +244,16 @@ def xsd2pdb(dir_init="", dir_target="", filename="system.xsd"):
 
     print("The PDB file has been generated at %s" % file_pdb)
 
-def xyz2lammpstrj(dir_init="", dir_target=""):
+def xyz2lammpstrj(**kwargs):
     '''
     通用函数，用于将xyz格式文件转换为lammpstrj格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
     os = check_module('os')
     dp = check_module('dpdata')
 
@@ -251,13 +285,18 @@ def xyz2lammpstrj(dir_init="", dir_target=""):
 
         print("The LAMMPStrj file has generated at %s" % dir_lammpstrj)
 
-def lammpstrj2xyz(dir_init="", dir_target="", names=['O', 'H']):
+def lammpstrj2xyz(**kwargs):
     '''
     通用函数，用于将lammpstrj格式文件转换为xyz格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("lammpstrj2xyz")
+    names = param.get("names", ['O', 'H'])
+
     mda = check_module('MDAnalysis')
     os = check_module('os')
 

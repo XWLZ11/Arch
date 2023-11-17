@@ -1,4 +1,4 @@
 __all__ = ['Singularity']
 
 
-from .singularity import *
+from .base import Singularity

@@ -4,13 +4,16 @@ __all__ = ['unzipfile', 'zipfile']
 
 from ...check import check_module, check_func
 
-def unzipfile(dir_init="", dir_target=""):
+def unzipfile(**kwargs):
     '''
     通用函数，用于解压zip格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
     zf = check_module('zipfile')
 
     file_zip = zf.ZipFile(dir_init)
@@ -18,13 +21,16 @@ def unzipfile(dir_init="", dir_target=""):
     file_zip.close()
     print("unzipfile all done!")
 
-def zipfile(dir_init="", dir_target=""):
+def zipfile(**kwargs):
     '''
     通用函数，用于解压zip格式文件。
 
     dir_init：初始目录路径
     dir_target：目标目录路径
     '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "") 
+
     zf = check_module('zipfile')
     os = check_module('os')
     
