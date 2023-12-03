@@ -1,5 +1,5 @@
-__all__ = ['pdb2xyz', 'pdb2lammpsdata', 'lammpstrj2lammpsdata', 'npy2poscar', 'poscar2xyz', 'xyz2npy', 
-           'xyz2lammpstrj', 'lammpstrj2xyz', 'xsd2pdb']
+__all__ = ['pdb2xyz', 'pdb2lammpsdata', 'lammpstrj2lammpsdata', 'npy2poscar', 'poscar2xyz', 
+           'qelog2npy','xyz2npy', 'xyz2lammpstrj', 'lammpstrj2xyz', 'xsd2pdb', 'lammpstrj2lammpstrj']
 
 
 
@@ -123,7 +123,10 @@ def npy2poscar(**kwargs):
     '''
     dir_init = kwargs.get("dir_init", "")
     dir_target = kwargs.get("dir_target", "")
-    param = kwargs.get("Arch.lib").get("operator").get("formats").get("npy2poscar")
+    if len(kwargs) > 2:
+        param = kwargs
+    else:
+        param = kwargs.get("Arch.lib").get("operator").get("formats").get("npy2poscar")
     multi = param.get("multi", False)
     record = param.get("record", 0)
 
@@ -144,7 +147,7 @@ def npy2poscar(**kwargs):
         sys.exit(e)
     else:
         for index in range(len(frames)):
-            frames[index].to("vasp/poscar", os.path.join(dir_poscar, str(index+record)+'.poscar'))
+            frames[index].to("vasp/poscar", os.path.join(dir_poscar, str(index+record).zfill(2)+'.poscar'))
         record += len(frames)
         
         print("The POSCAR file has been generated at %s" % dir_poscar)
@@ -182,7 +185,49 @@ def poscar2xyz(**kwargs):
             write(espresso_coord_file, frame, format='xyz')
 
         print("The XYZ file has been generated at %s" % dir_xyz)
+def qelog2npy(**kwargs):
+    '''
+    通用函数，用于将xyz格式文件转换为npy格式文件。
 
+    dir_init：初始目录路径
+    dir_target：目标目录路径
+    '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+
+    os, dp, np = check_module('os'), check_module('dpdata'), check_module('numpy')
+    read, Counter = check_func('ase.io', 'read'), check_func('collections', 'Counter')
+
+    dir_npy = os.path.join(dir_target, 'dpnpy')
+
+    try:
+        frames = read(os.path.join(dir_init, 'bo.out'), index=slice(None), format='espresso-out')
+    except FileExistsError as e:
+        import sys 
+        sys.exit(e)
+    else:
+        nframes, natoms = len(frames), len(frames[0])
+
+        system = dp.LabeledSystem()
+        list_atom_names = frames[0].get_chemical_symbols()
+        system.data['atom_names'] = sorted(set(list_atom_names), key=list_atom_names.index)
+        system.data['atom_numbs'] = [Counter(list_atom_names)[element] for element in system.data['atom_names']]
+        mapper = {k: v for v, k in enumerate(system.data['atom_names'])}
+        system.data['atom_types'] = np.array([mapper[element] for element in list_atom_names])
+        system.data['cells'] = np.zeros((nframes, 3, 3))
+        system.data['coords'] = np.zeros((nframes, natoms, 3))
+        system.data['energies'] = np.zeros((nframes))
+        system.data['forces'] = np.zeros((nframes, natoms, 3))
+        system.data['virials'] = np.zeros((nframes, 3, 3))
+
+        for i in range(nframes):
+            system.data['cells'][i, :, :] = frames[i].cell[:]
+            system.data['coords'][i, :, :] = frames[i].positions
+            system.data['energies'][i] = frames[i].get_total_energy()
+            system.data['forces'][i, :, :] = frames[i].get_forces()
+            system.data['virials'][i, :, :] = frames[i].get_stress(voigt=False)*(-1)*np.linalg.det(frames[i].cell)
+        system.to("deepmd/npy", dir_npy)
+        print("The deepmd/npy file has been generated at %s" % dir_npy)
 
 def xyz2npy(**kwargs):
     '''
@@ -278,7 +323,7 @@ def xyz2lammpstrj(**kwargs):
                 file_lammpstrj.write("ITEM: ATOMS id type x y z\n")
                 for id_atoms in range(0, num_atoms):
                     file_lammpstrj.write("%d %d %.8f %.8f %.8f\n"
-                        %(id_atoms+1, frame["atom_types"][id_atoms], 
+                        %(id_atoms+1, frame["atom_types"][id_atoms]+1, 
                         frame["coords"][0, id_atoms, 0], 
                         frame["coords"][0, id_atoms, 1],
                         frame["coords"][0, id_atoms, 2]))
@@ -319,3 +364,30 @@ def lammpstrj2xyz(**kwargs):
                                 % (atom.position[0], atom.position[1], atom.position[2]))
 
     print("The XYZ file has generated at %s" % dir_target)
+
+def lammpstrj2lammpstrj(**kwargs):
+    '''
+    通用函数，用于将lammpstrj格式文件中的type改为name。
+
+    dir_init：初始目录路径
+    dir_target：目标目录路径
+    '''
+    dir_init = kwargs.get("dir_init", "")
+    dir_target = kwargs.get("dir_target", "")
+    param = kwargs.get("Arch.lib").get("operator").get("formats").get("lammpstrj2lammpstrj")
+    mapping = param.get("mapping", [["1", "2"], ["O", "H"]])
+    filename = param.get("filename", "traj.lammpstrj")
+    os = check_module('os')
+    re = check_module('re')
+
+    replacement = dict(zip(mapping[0], mapping[1]))
+    with open(os.path.join(dir_init, filename), 'r') as file_lammpstrj:
+        content = file_lammpstrj.read()
+
+    pattern =  r'(\d+)( \D*\d+\.\d+ \D*\d+\.\d+ \D*\d+\.\d+\n)'
+    #print(re.search(pattern, content, re.M).group(1))
+    content = re.sub(pattern, lambda x: replacement[x.group(1)]+x.group(2), content, re.S)
+
+    with open(os.path.join(dir_target, 'traj.lammpstrj'), 'w') as file_lammpstrj:
+        file_lammpstrj.write(content)
+    print("The LAMMPStrj file has generated at %s" % dir_target)    

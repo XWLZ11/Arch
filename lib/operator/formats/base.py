@@ -111,6 +111,21 @@ class Formats(Singularity):
         '''
         poscar2xyz(**self.param)
 
+    def qelog2npy(self, **kwargs):
+        '''
+        通用方法，用于将xyz格式文件转换为npy格式文件。
+
+        dir_init：初始目录路径
+        dir_target：目标目录路径
+
+        用法举例：
+        path_json = '/home/tsingularity/Group/scripts/my_scripts/para_input.json'
+        S = Arch.Singularity(path_json)
+        file_pos = formats(path_json)
+        file_pos.qelog2npy()
+        '''
+        qelog2npy(**self.param)
+
     def xyz2npy(self, **kwargs):
         '''
         通用方法，用于将xyz格式文件转换为npy格式文件。
@@ -171,6 +186,20 @@ class Formats(Singularity):
         '''
 
         xsd2pdb(**self.param)    
+    def lammpstrj2lammpstrj(self, **kwargs):
+        '''
+        通用方法，用于将xsd格式文件转换为pdb格式文件。
+
+        dir_init：初始目录路径
+        dir_target：目标目录路径
+
+        用法举例：
+        path_json = '/home/tsingularity/Group/scripts/my_scripts/para_input.json'
+        S = Arch.Singularity(path_json)
+        file_pos = formats(path_json)
+        file_pos.lammpstrj2lammpstrj()
+        '''
+        lammpstrj2lammpstrj(**self.param)        
 
     def unzipfile(self, **kwargs):
         '''
